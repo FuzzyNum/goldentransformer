@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import csv
 
-class ground_truth_model:
+class Ground_truth_model:
     def __init__(self,model,tokenizer):
         self.tokenizer = tokenizer
         self.model = model
