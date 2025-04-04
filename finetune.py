@@ -9,8 +9,6 @@ class Ground_truth_model:
         self.tokenizer = tokenizer
         self.model = model
         self.original_state_dict = {k: v.clone() for k, v in self.model.state_dict().items()}  # Save original weights
-    def preprocess(self, text):
-        return self.tokenizer(text, return_tensors="pt", truncation=True, padding=True)
     def predict(self, text):
         inputs = self.preprocess(text)
         with torch.no_grad():

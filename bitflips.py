@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import csv
 from pytorchfi import core
-from finetune import ground_truth_model
+from finetune import Ground_truth_model
 
 def random_batch_element(pfi_model):
     return random.randint(0, pfi_model.get_total_batches() - 1)
