@@ -14,9 +14,17 @@ def random_neuron_location(pfi_model, layer=-1):
     if layer == -1:
         layer = random.randint(0, pfi_model.get_total_layers() - 1)
 
-    c = random.randint(0, pfi_model.get_fmaps_num(layer) - 1)
-    h = random.randint(0, pfi_model.get_fmaps_H(layer) - 1)
-    w = random.randint(0, pfi_model.get_fmaps_W(layer) - 1)
+    shape = pfi_model.get_layer_shape(layer)
+    try: 
+       _, seq_len, hidden = shape
+       h=random.randint(0,hidden-1)
+    except ValueError:
+        _, seq_len = shape
+        h=0
+
+    c = random.randint(0, seq_len-1)
+    
+    w = 0  # if 2D
 
     return (layer, c, h, w)
 
@@ -92,16 +100,28 @@ def random_neuron_inj_batched(
 
 def random_inj_per_layer(pfi_model, min_val=-1, max_val=1):
     batch, layer_num, c_rand, h_rand, w_rand, value = ([] for i in range(6))
+    
+
 
     b = random_batch_element(pfi_model)
     for i in range(pfi_model.get_total_layers()):
-        (layer, C, H, W) = random_neuron_location(pfi_model, layer=i)
-        batch.append(b)
-        layer_num.append(layer)
-        c_rand.append(C)
-        h_rand.append(H)
-        w_rand.append(W)
-        value.append(random_value(min_val=min_val, max_val=max_val))
+        if layer_num!=pfi_model.get_total_layers():
+            for i in range(0,20):
+                (layer, C, H, W) = random_neuron_location(pfi_model, layer=i)
+                batch.append(b)
+                layer_num.append(layer)
+                c_rand.append(C)
+                h_rand.append(H)
+                w_rand.append(W)
+                value.append(random_value(min_val=min_val, max_val=max_val))
+        else:
+            (layer, C, H, W) = random_neuron_location(pfi_model, layer=i)
+            batch.append(b)
+            layer_num.append(layer)
+            c_rand.append(C)
+            h_rand.append(H)
+            w_rand.append(W)
+            value.append(random_value(min_val=min_val, max_val=max_val))
 
     return pfi_model.declare_neuron_fi(
         batch=batch,
@@ -116,25 +136,29 @@ def random_inj_per_layer_batched(
     pfi_model, min_val=-1, max_val=1, randLoc=True, randVal=True
 ):
     batch, layer_num, c_rand, h_rand, w_rand, value = ([] for i in range(6))
-
-    for i in range(pfi_model.get_total_layers()):
-        if not randLoc:
-            (layer, C, H, W) = random_neuron_location(pfi_model, layer=i)
-        if not randVal:
-            err_val = random_value(min_val=min_val, max_val=max_val)
-
+    for i in range(0,pfi_model.get_total_layers()):
         for b in range(pfi_model.get_total_batches()):
-            if randLoc:
+            if layer_num!=pfi_model.get_total_layers():
+                for j in range(0,20):
+                    (layer, C, H, W) = random_neuron_location(pfi_model, layer=i)
+                    batch.append(b)
+                    layer_num.append(layer)
+                    c_rand.append(C)
+                    h_rand.append(H)
+                    w_rand.append(W)
+                    value.append(random_value(min_val=min_val, max_val=max_val))
+            else:
                 (layer, C, H, W) = random_neuron_location(pfi_model, layer=i)
-            if randVal:
-                err_val = random_value(min_val=min_val, max_val=max_val)
+                batch.append(b)
+                layer_num.append(layer)
+                c_rand.append(C)
+                h_rand.append(H)
+                w_rand.append(W)
+                value.append(random_value(min_val=min_val, max_val=max_val))
 
-            batch.append(b)
-            layer_num.append(layer)
-            c_rand.append(C)
-            h_rand.append(H)
-            w_rand.append(W)
-            value.append(err_val)
+
+        
+        print(f"Injecting into layer {layer}, neuron index {C}")
 
     return pfi_model.declare_neuron_fi(
         batch=batch,
