@@ -43,7 +43,6 @@ class ModifiedFaultInjection:
         self.corrupt_dim2 = []  # H
         self.corrupt_dim3 = []  # W
         self.corrupt_value = []
-
         self.use_cuda = kwargs.get("use_cuda", next(model.parameters()).is_cuda)
 
         if not isinstance(input_shape, list):
@@ -493,7 +492,7 @@ class ModifiedFaultInjection:
         return len(self.weights_size[layer_num])
 
     def get_layer_type(self, layer_num):
-        return self.layers_type[layer_num-1]
+        return self.layers_type[layer_num]
 
     def get_layer_dim(self, layer_num):
         return self.layers_dim[layer_num]
