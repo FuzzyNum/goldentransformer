@@ -61,25 +61,32 @@ class bit_flip(modified_fi.ModifiedFaultInjection):
 
     def error(self, module, input, output):
         shape = output.shape
-        output = output.flatten()
 
-        for i in range(len(output)):
-            float_val = output[i].item()
-            int_val = np.frombuffer(np.float32(float_val).tobytes(), dtype=np.uint32)[0]
+        # Flatten and move to CPU for fast numpy ops
+        output_cpu = output.detach().cpu().flatten().numpy().astype(np.float32)
 
-            # Flip one random bit
-            bit = random.randint(0, 31)
-            flipped = int_val ^ (1 << bit)
+        # View float32 as int32 bitwise
+        int_view = output_cpu.view(dtype=np.uint32)
 
-            # Convert back to float
-            new_float = np.frombuffer(np.uint32(flipped).tobytes(), dtype=np.float32)[0]
-            output[i] = torch.tensor(new_float, dtype=torch.float32)
+        # Generate random bit indices to flip
+        bits_to_flip = np.random.randint(0, 32, size=int_view.shape)
 
-        output = output.view(shape)
+        # Create bit masks and flip bits
+        flipped_ints = int_view ^ (1 << bits_to_flip)
+
+        # Convert back to float
+        flipped_floats = flipped_ints.view(dtype=np.float32)
+
+        # Convert back to torch tensor, reshape, and move to original device
+        flipped_tensor = torch.tensor(flipped_floats, dtype=output.dtype, device=output.device).view(shape)
+
+        # Overwrite original output (in-place modification)
+        output.data.copy_(flipped_tensor)
 
         self.updateLayer()
         if self.get_current_layer() >= self.get_total_layers():
             self.reset_current_layer()
+
 
 
 class single_bit_flip_func(modified_fi.ModifiedFaultInjection):
