@@ -6,6 +6,7 @@ import csv
 from pytorchfi import core
 from finetune import Ground_truth_model
 
+
 def random_batch_element(pfi_model):
     return random.randint(0, pfi_model.get_total_batches() - 1)
 
@@ -161,6 +162,7 @@ def random_inj_per_layer_batched(
         
 
     return pfi_model.declare_neuron_fi(
+        function=pfi_model.error,
         batch=batch,
         layer_num=layer_num,
         dim1=c_rand,
@@ -175,8 +177,8 @@ def random_inj_one_layer_batched(
     batch, layer_num, c_rand, h_rand, w_rand, value = ([] for i in range(6))
     i = layer_given
     for b in range(pfi_model.get_total_batches()):
-        if layer_num!=pfi_model.get_total_layers():
-            for j in range(0,100):
+        if i!=pfi_model.get_total_layers():
+            for j in range(0,1):
                 (layer, C, H, W) = random_neuron_location(pfi_model, layer=i)
 
                 batch.append(b)
@@ -185,7 +187,6 @@ def random_inj_one_layer_batched(
                 h_rand.append(H)
                 w_rand.append(W)
                 value.append(random_value(min_val=min_val, max_val=max_val))
-                print(j)
         else:
             (layer, C, H, W) = random_neuron_location(pfi_model, layer=i)
             batch.append(b)
@@ -197,8 +198,9 @@ def random_inj_one_layer_batched(
 
 
         
-
+    print(f"[Injection] Layer {layer} | Loc: ({C}, {H}, {W}) | Value: {value}")
     return pfi_model.declare_neuron_fi(
+        function=pfi_model.error,
         batch=batch,
         layer_num=layer_num,
         dim1=c_rand,

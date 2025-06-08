@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import torch
 import csv
-from pytorchfi import core
+
 
 """pytorchfi.core contains the core functionality for fault injections"""
 
