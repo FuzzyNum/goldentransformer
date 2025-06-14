@@ -1,0 +1,22 @@
+{
+  "baseline": {
+    "Accuracy": 0.89088
+  },
+  "faults": {
+    "WeightCorruption(severity=0.001)": {
+      "Accuracy": 0.89088
+    },
+    "WeightCorruption(severity=0.005)": {
+      "Accuracy": 0.89088
+    },
+    "WeightCorruption(severity=0.01)": {
+      "Accuracy": 0.89088
+    },
+    "WeightCorruption(severity=0.02)": {
+      "Accuracy": 0.89088
+    },
+    "WeightCorruption(severity=0.05)": {
+      "Accuracy": 0.89088
+    }
+  }
+}

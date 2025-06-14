@@ -1,0 +1,8 @@
+2025-06-14 17:20:37,422 - INFO - Starting experiment
+2025-06-14 17:20:37,422 - INFO - Running baseline evaluation
+2025-06-14 17:20:40,027 - INFO - Running experiment with fault: LayerFault(layers=[0], type=attention_mask, severity=0.2)
+2025-06-14 17:20:40,027 - ERROR - Error during fault injection: Model must have transformer.h or transformer as ModuleList
+2025-06-14 17:20:40,027 - INFO - Running experiment with fault: WeightCorruption(severity=0.1)
+2025-06-14 17:20:44,454 - INFO - Running experiment with fault: ActivationFault(layers=[0], type=clamp, severity=0.3)
+2025-06-14 17:20:44,454 - ERROR - Error during fault injection: Model must have transformer.h or transformer as ModuleList
+2025-06-14 17:20:44,454 - INFO - Experiment completed

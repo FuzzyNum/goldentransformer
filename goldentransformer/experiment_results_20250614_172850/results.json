@@ -1,0 +1,22 @@
+{
+  "baseline": {
+    "Accuracy": {
+      "Accuracy": 0.0
+    },
+    "LatencyMetric": {
+      "latency_ms": 2.9709339141845703,
+      "confidence": 0.8459192681165235,
+      "avg_latency_ms": 3.117293119430542,
+      "min_latency_ms": 2.734065055847168,
+      "max_latency_ms": 3.8291215896606445,
+      "avg_confidence": 0.8650818116071595
+    }
+  },
+  "fault_results": [
+    {
+      "fault_info": "BadFault(layers=[0], type=attention_mask, severity=0.2)",
+      "metrics": {},
+      "error": "Test error"
+    }
+  ]
+}

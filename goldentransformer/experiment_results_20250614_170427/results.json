@@ -1,0 +1,49 @@
+{
+  "baseline": {
+    "LatencyMetric": {
+      "latency_ms": 3.787660598754883,
+      "confidence": 0.7190714186798938,
+      "avg_latency_ms": 3.5558223724365234,
+      "min_latency_ms": 3.206205368041992,
+      "max_latency_ms": 3.787660598754883,
+      "avg_confidence": 0.8002913396823254
+    },
+    "Accuracy": {
+      "Accuracy": 0.0
+    }
+  },
+  "fault_results": [
+    {
+      "fault_info": "LayerFault(layers=[0], type=attention_mask, severity=0.2)",
+      "metrics": {
+        "LatencyMetric": {
+          "latency_ms": 3.4938812255859375,
+          "confidence": 0.6892400917130691,
+          "avg_latency_ms": 3.5211801528930664,
+          "min_latency_ms": 3.3377647399902344,
+          "max_latency_ms": 3.639364242553711,
+          "avg_confidence": 0.6683016129870681
+        },
+        "Accuracy": {
+          "Accuracy": 0.0
+        }
+      }
+    },
+    {
+      "fault_info": "WeightCorruption(severity=0.1)",
+      "metrics": {
+        "LatencyMetric": {
+          "latency_ms": 3.6306381225585938,
+          "confidence": 0.5989624376149199,
+          "avg_latency_ms": 3.470945358276367,
+          "min_latency_ms": 3.0934810638427734,
+          "max_latency_ms": 3.6306381225585938,
+          "avg_confidence": 0.7564807122150186
+        },
+        "Accuracy": {
+          "Accuracy": 0.0
+        }
+      }
+    }
+  ]
+}

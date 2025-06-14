@@ -1,0 +1,43 @@
+{
+  "baseline": {
+    "Accuracy": {
+      "Accuracy": 0.875
+    },
+    "LatencyMetric": {
+      "latency_ms": 119.31292215983073,
+      "confidence": 0.9755932176294742,
+      "avg_latency_ms": 121.56260013580324,
+      "min_latency_ms": 118.38245391845703,
+      "max_latency_ms": 125.70540110270183,
+      "avg_confidence": 0.952400224281114
+    }
+  },
+  "fault_results": [
+    {
+      "fault_info": "LayerFault(layers=[0], type=attention_mask, severity=0.2)",
+      "metrics": {},
+      "error": "Model must have transformer.h or transformer as ModuleList"
+    },
+    {
+      "fault_info": "WeightCorruption(severity=0.1)",
+      "metrics": {
+        "Accuracy": {
+          "Accuracy": 0.625
+        },
+        "LatencyMetric": {
+          "latency_ms": 131.46376609802246,
+          "confidence": 0.9014960128690839,
+          "avg_latency_ms": 125.9421706199646,
+          "min_latency_ms": 120.29202779134114,
+          "max_latency_ms": 131.46376609802246,
+          "avg_confidence": 0.9301665082736127
+        }
+      }
+    },
+    {
+      "fault_info": "ActivationFault(layers=[0], type=clamp, severity=0.3)",
+      "metrics": {},
+      "error": "Model must have transformer.h or transformer as ModuleList"
+    }
+  ]
+}
