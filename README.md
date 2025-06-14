@@ -166,10 +166,10 @@ If you use GoldenTransformer in your research, please cite:
 
 ```bibtex
 @software{goldentransformer2024,
-  author = {Your Name},
+  author = {Luke Howard},
   title = {GoldenTransformer: LLM Fault Injection Framework},
   year = {2024},
   publisher = {GitHub},
-  url = {https://github.com/yourusername/goldentransformer}
+  url = {https://github.com/FuzzyNum/goldentransformer}
 }
 ``` 
