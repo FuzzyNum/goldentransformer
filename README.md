@@ -75,6 +75,39 @@ print(results)
 - **WeightCorruption**: Works with most PyTorch models (including HuggingFace transformers)
 - **LayerFault/ActivationFault**: Designed for GPT-style models with a `transformer.h` or `transformer` attribute as a `ModuleList`. These may not work out-of-the-box with models like DistilBERT or BERT. You may need to adapt the fault class for your model architecture.
 
+## Understanding Fault Severity
+
+The severity parameter (0.0 to 1.0) controls the intensity of fault injection. Here's how severity affects each fault type:
+
+### Layer Faults
+- **Attention Mask Faults**: Severity determines the proportion of attention mask elements that are zeroed out (e.g., severity=0.2 means 20% of mask elements are zeroed)
+- **Dropout Faults**: Severity increases the dropout rate by that amount (e.g., severity=0.3 increases dropout by 30%, capped at 1.0)
+
+### Activation Faults
+- **Clamp Faults**: Severity sets the maximum absolute value of activations (e.g., severity=0.5 clamps values to [-0.5, 0.5])
+- **Noise Faults**: Severity controls the standard deviation of added Gaussian noise
+- **Zero-out Faults**: Severity determines the probability of zeroing out activations (e.g., severity=0.3 means 30% chance of zeroing)
+
+### Weight Corruption
+- **Random Corruption**: Severity determines the proportion of weights to corrupt (e.g., severity=0.1 corrupts 10% of weights)
+- **Bit-flip Corruption**: Severity controls the probability of flipping bits in weight values
+- **Structured Corruption**: Severity affects the magnitude of corruption applied to weight patterns
+
+### Attention Faults
+- **Mask Corruption**: Severity controls the intensity of noise added to attention masks
+- **Head Dropout**: Severity determines the proportion of attention heads to drop
+- **Query/Key/Value Corruption**: Severity controls the magnitude of corruption in respective vectors
+
+Example usage with different severity levels:
+```python
+faults = [
+    LayerFault(layer_idx=0, severity=0.2),  # Moderate layer fault
+    ActivationFault(layer_idx=1, severity=0.5),  # Strong activation fault
+    WeightCorruption(corruption_rate=0.1),  # Light weight corruption
+    AttentionFault(layer_idx=2, severity=0.3)  # Moderate attention fault
+]
+```
+
 ## Visualizing Results
 
 After running an experiment, results are saved as a `results.json` file in a timestamped directory (e.g., `experiment_results_YYYYMMDD_HHMMSS/results.json`).
@@ -151,6 +184,51 @@ Run the test suite:
 ```bash
 pytest tests/
 ```
+
+## Example Scripts
+
+Additional example scripts are available in the `examples/` directory:
+
+- **severity_analysis.py**:  
+  A comprehensive example using GPT-2 (a GPT-style model) to demonstrate the effect of different severity levels for LayerFault, WeightCorruption, and ActivationFault. This is the recommended starting point for new users who want to see the framework's full capabilities.
+
+- **simple_experiment.py**:  
+  A minimal example using GPT-2, showing how to set up a basic experiment with layer and weight faults.
+
+- **attention_fault_analysis.py**:  
+  An advanced example for analyzing the impact of various attention mechanism faults (e.g., mask corruption, head dropout, query/key/value corruption) on GPT-2.
+
+## How to Add New Faults
+
+To add a new fault type to the framework:
+
+1. **Create a new class** in `goldentransformer/faults/` that inherits from `BaseFault`.
+2. **Implement the required methods:**
+   - `inject(self, model: torch.nn.Module)`:  
+     Define how the fault is injected into the model.
+   - `revert(self, model: torch.nn.Module)`:  
+     Define how to revert the model to its original state.
+3. **Add any custom parameters** to your fault's `__init__` method as needed (e.g., severity, target layers).
+4. **Register and use your new fault** in your experiment scripts, just like the built-in faults.
+
+**Example skeleton:**
+```python
+from goldentransformer.faults.base_fault import BaseFault
+
+class MyCustomFault(BaseFault):
+    def __init__(self, severity=0.1, ...):
+        super().__init__(severity)
+        # Your custom parameters here
+
+    def inject(self, model):
+        # Your fault injection logic here
+        pass
+
+    def revert(self, model):
+        # Your revert logic here
+        pass
+```
+For inspiration, see the existing faults in `goldentransformer/faults/`.
 
 ## Contributing
 
