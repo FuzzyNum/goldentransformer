@@ -53,7 +53,7 @@ class ExperimentRunner:
         # Setup output directory
         if output_dir is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            self.output_dir = Path(f"experiment_results_{timestamp}")
+            self.output_dir = Path("goldentransformer/experiment_results") / f"experiment_results_{timestamp}"
         else:
             self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)

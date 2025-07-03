@@ -9,7 +9,7 @@
       "fault_info": "WeightCorruption(severity=1e-43)",
       "metrics": {
         "Perplexity": {
-          "Perplexity": 72314265600.0
+          "Perplexity": 2399396.25
         }
       }
     }

@@ -33,7 +33,8 @@ def main():
     faults = [
         WeightCorruption(
             pattern="bit_flip",
-            corruption_rate=0.0000000000000000000000000000000000000000001
+            corruption_rate=0.0000000000000000000000000000000000000000001,
+            target_layers=[1,2]
         )
     ]
     metrics = [
