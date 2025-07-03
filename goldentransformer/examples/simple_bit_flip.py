@@ -3,6 +3,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from goldentransformer import FaultInjector, ExperimentRunner
 from goldentransformer.faults import LayerFault, WeightCorruption
 from goldentransformer.metrics import Accuracy, LatencyMetric, Perplexity
+from goldentransformer.visualization.plotter import plot_results
 
 def main():
     # Load model and tokenizer
@@ -43,6 +44,9 @@ def main():
     experiment = ExperimentRunner(injector, faults, metrics, dataset)
     print("Starting experiment...")
     results = experiment.run()
+    
+    # Visualization: plot and save results
+    plot_results(results, str(experiment.output_dir))
     
     # Print results
     print("\nBaseline Results:")
