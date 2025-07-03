@@ -26,18 +26,23 @@ class Perplexity(BaseMetric):
         Returns:
             float: Perplexity value
         """
-        # Get logits and target tokens
-        logits = outputs.logits
+        # Align logits and targets for next-token prediction
+        # logits: [batch_size, seq_len, vocab_size] -> [batch_size, seq_len-1, vocab_size]
+        # targets: [batch_size, seq_len] -> [batch_size, seq_len-1]
+        logits = outputs.logits[:, :-1, :]
         targets = inputs["input_ids"][:, 1:]
         
         # Compute cross entropy loss
         loss_fn = torch.nn.CrossEntropyLoss(reduction='none')
         loss = loss_fn(
-            logits.view(-1, logits.size(-1)),
-            targets.view(-1)
+            logits.reshape(-1, logits.size(-1)),
+            targets.reshape(-1)
         )
         
         # Compute perplexity
         perplexity = torch.exp(loss.mean())
         
         return perplexity.item() * batch_size 
+
+    def reset(self):
+        pass 

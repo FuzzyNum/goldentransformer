@@ -1,0 +1,4 @@
+2025-07-03 10:45:44,875 - INFO - Starting experiment
+2025-07-03 10:45:44,875 - INFO - Running baseline evaluation
+2025-07-03 10:45:44,922 - INFO - Running experiment with fault: WeightCorruption(severity=1e-29)
+2025-07-03 10:45:45,223 - INFO - Experiment completed

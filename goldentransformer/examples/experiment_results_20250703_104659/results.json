@@ -1,0 +1,17 @@
+{
+  "baseline": {
+    "Perplexity": {
+      "Perplexity": 6065.02392578125
+    }
+  },
+  "fault_results": [
+    {
+      "fault_info": "WeightCorruption(severity=1e-43)",
+      "metrics": {
+        "Perplexity": {
+          "Perplexity": 72314265600.0
+        }
+      }
+    }
+  ]
+}

@@ -7,6 +7,7 @@ import json
 import time
 import torch
 import logging
+import inspect
 from typing import List, Dict, Any, Optional, Union
 from pathlib import Path
 from datetime import datetime
@@ -159,17 +160,25 @@ class ExperimentRunner:
             
             # Compute metrics
             for metric in self.metrics:
-                if metric.__class__.__name__ == "Accuracy":
+                compute_sig = inspect.signature(metric.compute)
+                params = list(compute_sig.parameters.keys())
+                # Determine if the first argument expects outputs or model
+                expects_outputs = params[0] in ("outputs", "logits", "predictions")
+                expects_batch_size = params[-1] == 'batch_size'
+                if expects_outputs:
                     outputs = self.injector.model(**batch)
-                    metric_results = metric.compute(outputs, batch, self.batch_size)
-                    if not isinstance(metric_results, dict):
-                        metric_results = {metric.__class__.__name__: metric_results}
-                    results[metric.__class__.__name__] = metric_results
+                    if expects_batch_size:
+                        metric_results = metric.compute(outputs, batch, self.batch_size)
+                    else:
+                        metric_results = metric.compute(outputs, batch)
                 else:
-                    metric_results = metric.compute(self.injector.model, batch)
-                    if not isinstance(metric_results, dict):
-                        metric_results = {metric.__class__.__name__: metric_results}
-                    results[metric.__class__.__name__] = metric_results
+                    if expects_batch_size:
+                        metric_results = metric.compute(self.injector.model, batch, self.batch_size)
+                    else:
+                        metric_results = metric.compute(self.injector.model, batch)
+                if not isinstance(metric_results, dict):
+                    metric_results = {metric.__class__.__name__: metric_results}
+                results[metric.__class__.__name__] = metric_results
         
         # Get metric summaries
         for metric in self.metrics:

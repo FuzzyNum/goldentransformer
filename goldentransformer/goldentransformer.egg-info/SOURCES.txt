@@ -1,4 +1,3 @@
-README.md
 setup.py
 goldentransformer/__init__.py
 goldentransformer.egg-info/PKG-INFO
@@ -11,12 +10,15 @@ goldentransformer/core/base_fault.py
 goldentransformer/core/experiment_runner.py
 goldentransformer/core/fault_injector.py
 goldentransformer/faults/__init__.py
+goldentransformer/faults/activation_fault.py
 goldentransformer/faults/attention_fault.py
 goldentransformer/faults/base_fault.py
+goldentransformer/faults/layer_fault.py
 goldentransformer/faults/weight_corruption.py
 goldentransformer/metrics/__init__.py
 goldentransformer/metrics/accuracy.py
 goldentransformer/metrics/base_metric.py
+goldentransformer/metrics/latency.py
 goldentransformer/metrics/perplexity.py
 goldentransformer/visualization/__init__.py
 goldentransformer/visualization/plotter.py
