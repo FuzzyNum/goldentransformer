@@ -45,9 +45,6 @@ def main():
     print("Starting experiment...")
     results = experiment.run()
     
-    # Visualization: plot and save results
-    plot_results(results, str(experiment.output_dir))
-    
     # Print results
     print("\nBaseline Results:")
     for metric_name, metric_results in results["baseline"].items():
