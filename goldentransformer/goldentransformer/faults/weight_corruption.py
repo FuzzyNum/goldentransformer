@@ -157,12 +157,43 @@ class WeightCorruption(BaseFault):
     
     def _bit_flip_corruption(self, weights: torch.Tensor) -> None:
         """Apply bit-flip corruption to weights."""
-        # Convert to binary representation
-        binary = weights.byte()
+        # Get the number of bits to flip based on severity
+        total_bits = weights.numel() * 32  # 32 bits per float
+        num_bits_to_flip = int(total_bits * self.severity)
         
-        # Randomly flip bits
-        mask = torch.rand_like(weights) < self.severity
-        binary[mask] = ~binary[mask]
+        if num_bits_to_flip == 0:
+            return  # No bits to flip
         
-        # Convert back to float
-        weights.copy_(binary.float()) 
+        # Store original weights for comparison
+        original_weights = weights.clone()
+        
+        # Flatten weights for easier manipulation
+        flat_weights = weights.flatten()
+        
+        # Convert to int32 for bit manipulation (avoid uint32 promotion issues)
+        weights_int = flat_weights.view(torch.int32)
+        
+        # For IEEE 754 float32: 1 sign bit + 8 exponent bits + 23 mantissa bits
+        # We'll only flip bits in the mantissa (bits 0-22) to avoid infinite values
+        mantissa_bits = 23
+        total_mantissa_bits = weights.numel() * mantissa_bits
+        
+        # Calculate how many mantissa bits to flip
+        mantissa_bits_to_flip = int(total_mantissa_bits * self.severity)
+        
+        if mantissa_bits_to_flip == 0:
+            return
+        
+        # Randomly select mantissa bits to flip
+        mantissa_bit_indices = torch.randperm(total_mantissa_bits, dtype=torch.long)[:mantissa_bits_to_flip]
+        
+        for mantissa_bit_idx in mantissa_bit_indices:
+            # Calculate which weight and which bit within that weight's mantissa
+            weight_idx = mantissa_bit_idx // mantissa_bits
+            bit_pos = mantissa_bit_idx % mantissa_bits  # This is 0-22 (mantissa bits)
+            
+            # Flip the specific mantissa bit
+            weights_int[weight_idx] = weights_int[weight_idx] ^ (1 << bit_pos)
+        
+        # Convert back to float (no need to copy since we modified in place)
+        # The view operation automatically handles the conversion 
