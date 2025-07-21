@@ -9,22 +9,29 @@ from goldentransformer import FaultInjector, ExperimentRunner
 from goldentransformer.faults import WeightCorruption
 from goldentransformer.metrics import Perplexity
 from goldentransformer.visualization.plotter import plot_results
+import sys
+import random
+import numpy as np
+from datasets import load_dataset
 
 def main():
-    # Load model and tokenizer
-    model_name = "gpt2"
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    num_trials = 10
+    seeds = [42 + i for i in range(num_trials)]
+    # Allow model name as a command-line argument
+    if len(sys.argv) > 1:
+        model_name = sys.argv[1]
+    else:
+        model_name = "gpt2"
     model = AutoModelForCausalLM.from_pretrained(model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    tokenizer.pad_token = tokenizer.eos_token
-    model.config.pad_token_id = model.config.eos_token_id
-    injector = FaultInjector(model)
-    test_texts = [
-        "The quick brown fox jumps over the lazy dog.",
-        "Hello, how are you today?",
-        "This is a test of the fault injection framework.",
-        "The weather is beautiful outside.",
-        "I love programming and machine learning."
-    ]
+    if hasattr(tokenizer, 'pad_token') and tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token if hasattr(tokenizer, 'eos_token') else tokenizer.unk_token
+    if hasattr(model.config, 'pad_token_id'):
+        model.config.pad_token_id = tokenizer.pad_token_id
+    # Use a subset of WikiText for a more robust dataset
+    wikitext = load_dataset("wikitext", "wikitext-2-raw-v1", split="test[:100]")
+    test_texts = [x["text"] for x in wikitext if x["text"].strip()]
     encodings = tokenizer(
         test_texts,
         padding=True,
@@ -36,73 +43,109 @@ def main():
         encodings["input_ids"],
         encodings["attention_mask"]
     )
-
-    # Prepare output subfolder for all results
     base_results_dir = "goldentransformer/experiment_results"
-    layer_results_dir = os.path.join(base_results_dir, "layer_experiment_results")
+    layer_results_dir = os.path.join(base_results_dir, f"layer_experiment_results_{model_name}")
     os.makedirs(layer_results_dir, exist_ok=True)
-
-    # Store perplexity results for plotting
-    layer_indices = []
-    baseline_perplexities = []
-    faulted_perplexities = []
-
-    # Run experiment for each of the first 10 layers
-    for layer_idx in range(10):
-        print(f"\nRunning experiment for layer {layer_idx}...")
-        faults = [
-            WeightCorruption(
-                pattern="bit_flip",
-                corruption_rate=0.000000000001,
-                target_layers=[layer_idx]
+    num_layers = 10
+    all_baseline = []
+    all_faulted = []
+    for trial, seed in enumerate(seeds):
+        print(f"\n=== Trial {trial+1}/{num_trials} (seed={seed}) ===")
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+        
+        layer_indices = []
+        baseline_perplexities = []
+        faulted_perplexities = []
+        
+        for layer_idx in range(num_layers):
+            print(f"\nRunning experiment for layer {layer_idx}...")
+            # Create a fresh model for each layer
+            fresh_model = AutoModelForCausalLM.from_pretrained(model_name)
+            fresh_model.eval()
+            fresh_model.to(device)
+            
+            # Set temperature to 0 for deterministic output
+            if hasattr(fresh_model.config, 'temperature'):
+                fresh_model.config.temperature = 0.0
+            
+            injector = FaultInjector(fresh_model)
+            faults = [
+                WeightCorruption(
+                    pattern="bit_flip",
+                    corruption_rate=0.01,
+                    target_layers=[layer_idx]
+                )
+            ]
+            metrics = [Perplexity()]
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            experiment_output_dir = os.path.join(base_results_dir, f"experiment_results_{model_name}_{timestamp}_trial{trial}")
+            experiment = ExperimentRunner(
+                injector=injector,
+                faults=faults,
+                metrics=metrics,
+                dataset=dataset,
+                output_dir=experiment_output_dir
             )
-        ]
-        metrics = [Perplexity()]
-        # Use millisecond precision for output dir
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        experiment_output_dir = os.path.join(base_results_dir, f"experiment_results_{timestamp}")
-        experiment = ExperimentRunner(
-            injector=injector,
-            faults=faults,
-            metrics=metrics,
-            dataset=dataset,
-            output_dir=experiment_output_dir
-        )
-        results = experiment.run()
-        plot_results(results, str(experiment.output_dir))
-        # Move the experiment result folder into the layer_experiment_results subfolder
-        dest = os.path.join(layer_results_dir, experiment.output_dir.name)
-        if os.path.exists(dest):
-            shutil.rmtree(dest)
-        shutil.move(str(experiment.output_dir), dest)
-        print(f"Results for layer {layer_idx} saved to {dest}")
-        # Aggregate perplexity results
-        # Baseline
-        baseline = results["baseline"].get("Perplexity")
-        if isinstance(baseline, dict):
-            baseline = list(baseline.values())[0]
-        # Faulted
-        faulted = results["fault_results"][0]["metrics"].get("Perplexity")
-        if isinstance(faulted, dict):
-            faulted = list(faulted.values())[0]
-        layer_indices.append(layer_idx)
-        baseline_perplexities.append(baseline)
-        faulted_perplexities.append(faulted)
-
-    # Plot aggregate perplexity vs. layer
+            results = experiment.run()
+            plot_results(results, str(experiment.output_dir))
+            dest = os.path.join(layer_results_dir, experiment.output_dir.name)
+            if os.path.exists(dest):
+                shutil.rmtree(dest)
+            shutil.move(str(experiment.output_dir), dest)
+            print(f"Results for layer {layer_idx} saved to {dest}")
+            baseline = results["baseline"].get("Perplexity")
+            if isinstance(baseline, dict):
+                baseline = list(baseline.values())[0]
+            faulted = results["fault_results"][0]["metrics"].get("Perplexity")
+            if isinstance(faulted, dict):
+                faulted = list(faulted.values())[0]
+            layer_indices.append(layer_idx)
+            baseline_perplexities.append(baseline)
+            faulted_perplexities.append(faulted)
+        all_baseline.append(baseline_perplexities)
+        all_faulted.append(faulted_perplexities)
+    all_baseline = np.array(all_baseline)
+    all_faulted = np.array(all_faulted)
+    mean_baseline = all_baseline.mean(axis=0)
+    std_baseline = all_baseline.std(axis=0)
+    mean_faulted = all_faulted.mean(axis=0)
+    std_faulted = all_faulted.std(axis=0)
+    layers = np.arange(num_layers)
     plt.figure(figsize=(10, 6))
-    plt.plot(layer_indices, baseline_perplexities, marker='o', label='Baseline Perplexity')
-    plt.plot(layer_indices, faulted_perplexities, marker='o', label='Faulted Perplexity')
+    plt.errorbar(layers, mean_baseline, yerr=std_baseline, label='Baseline Perplexity', fmt='-o')
+    plt.errorbar(layers, mean_faulted, yerr=std_faulted, label='Faulted Perplexity', fmt='-o')
     plt.xlabel('Layer Index')
     plt.ylabel('Perplexity')
-    plt.title('Perplexity vs. Layer Index (Bit-Flip Fault)')
+    plt.title(f'Perplexity vs. Layer Index (Bit-Flip Fault, Mean ± Std) - {model_name}')
     plt.yscale('log')
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig(os.path.join(layer_results_dir, "perplexity_vs_layer.png"))
+    plt.savefig(os.path.join(layer_results_dir, f"perplexity_vs_layer_with_errorbars_{model_name}.png"))
     plt.close()
-    print(f"Aggregate plot saved to {os.path.join(layer_results_dir, 'perplexity_vs_layer.png')}")
+    print(f"Aggregate plot with error bars saved to {os.path.join(layer_results_dir, f'perplexity_vs_layer_with_errorbars_{model_name}.png')}")
+
+    # Plot minimalist version: no axis labels/titles, Times New Roman font for numbers and legend
+    plt.figure(figsize=(10, 6))
+    plt.plot(layer_indices, baseline_perplexities, marker='o', label='Baseline Perplexity')
+    plt.plot(layer_indices, faulted_perplexities, marker='o', label='Faulted Perplexity')
+    plt.yscale('log')
+    plt.legend(prop={'family': 'Times New Roman', 'size': 14})
+    plt.grid(True)
+    plt.tight_layout()
+    ax = plt.gca()
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.set_title("")
+    ax.tick_params(axis='both', which='major', labelsize=14)
+    for label in ax.get_xticklabels() + ax.get_yticklabels():
+        label.set_fontname('Times New Roman')
+    plt.savefig(os.path.join(layer_results_dir, f"perplexity_vs_layer_minimalist_{model_name}.png"))
+    plt.close()
 
 if __name__ == "__main__":
     main() 
