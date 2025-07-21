@@ -156,44 +156,35 @@ class WeightCorruption(BaseFault):
             self._random_corruption(weights)
     
     def _bit_flip_corruption(self, weights: torch.Tensor) -> None:
-        """Apply bit-flip corruption to weights."""
-        # Get the number of bits to flip based on severity
-        total_bits = weights.numel() * 32  # 32 bits per float
-        num_bits_to_flip = int(total_bits * self.severity)
-        
-        if num_bits_to_flip == 0:
-            return  # No bits to flip
-        
-        # Store original weights for comparison
-        original_weights = weights.clone()
-        
-        # Flatten weights for easier manipulation
-        flat_weights = weights.flatten()
-        
-        # Convert to int32 for bit manipulation (avoid uint32 promotion issues)
-        weights_int = flat_weights.view(torch.int32)
-        
-        # For IEEE 754 float32: 1 sign bit + 8 exponent bits + 23 mantissa bits
-        # We'll only flip bits in the mantissa (bits 0-22) to avoid infinite values
+        """Apply bit-flip corruption to weights, guaranteed to flip bits in the binary representation."""
+        device = weights.device
+        dtype = weights.dtype
+        weights_cpu = weights.detach().cpu().contiguous()
+        arr = weights_cpu.numpy().view(np.int32)
+        shape = weights_cpu.shape
         mantissa_bits = 23
-        total_mantissa_bits = weights.numel() * mantissa_bits
-        
-        # Calculate how many mantissa bits to flip
-        mantissa_bits_to_flip = int(total_mantissa_bits * self.severity)
-        
-        if mantissa_bits_to_flip == 0:
-            return
-        
-        # Randomly select mantissa bits to flip
-        mantissa_bit_indices = torch.randperm(total_mantissa_bits, dtype=torch.long)[:mantissa_bits_to_flip]
-        
-        for mantissa_bit_idx in mantissa_bit_indices:
-            # Calculate which weight and which bit within that weight's mantissa
-            weight_idx = mantissa_bit_idx // mantissa_bits
-            bit_pos = mantissa_bit_idx % mantissa_bits  # This is 0-22 (mantissa bits)
-            
-            # Flip the specific mantissa bit
-            weights_int[weight_idx] = weights_int[weight_idx] ^ (1 << bit_pos)
-        
-        # Convert back to float (no need to copy since we modified in place)
-        # The view operation automatically handles the conversion 
+
+        # Save original for diagnostics
+        original = weights_cpu.clone()
+
+        # Create a mask for which weights should be corrupted (probability per weight)
+        corruption_mask = np.random.rand(*shape) < self.severity
+        corrupted_indices = np.where(corruption_mask)
+        num_selected = len(corrupted_indices[0])
+        num_bits_flipped = 0
+
+        for idx in zip(*corrupted_indices):
+            flat_idx = np.ravel_multi_index(idx, shape)
+            bit_pos = np.random.randint(0, mantissa_bits)
+            before = arr.flat[flat_idx]
+            arr.flat[flat_idx] ^= (1 << bit_pos)
+            after = arr.flat[flat_idx]
+            if before != after:
+                num_bits_flipped += 1
+
+        # Copy the modified values back to the original tensor
+        weights.data.copy_(torch.from_numpy(arr.view(np.float32)).to(device).type(dtype))
+
+        # Diagnostics
+        mean_abs_diff = (weights_cpu - original).abs().mean().item()
+        print(f"[BitFlip] Selected weights: {num_selected}, Bits flipped: {num_bits_flipped}, Mean abs diff: {mean_abs_diff}") 

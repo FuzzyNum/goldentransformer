@@ -1,0 +1,147 @@
+{
+  "baseline": {
+    "Accuracy": {
+      "Accuracy": 0.75
+    },
+    "LatencyMetric": {
+      "latency_ms": 46.03242874145508,
+      "confidence": 0.9447776500201995,
+      "avg_latency_ms": 113.76245816548665,
+      "min_latency_ms": 46.03242874145508,
+      "max_latency_ms": 132.82179832458496,
+      "avg_confidence": 0.9353400759704512
+    }
+  },
+  "fault_results": [
+    {
+      "fault_info": "LayerFault(layers=[0], type=attention_mask, severity=0.1)",
+      "metrics": {},
+      "error": "Model must have transformer.h or transformer as ModuleList"
+    },
+    {
+      "fault_info": "LayerFault(layers=[0], type=attention_mask, severity=0.3)",
+      "metrics": {},
+      "error": "Model must have transformer.h or transformer as ModuleList"
+    },
+    {
+      "fault_info": "LayerFault(layers=[0], type=attention_mask, severity=0.5)",
+      "metrics": {},
+      "error": "Model must have transformer.h or transformer as ModuleList"
+    },
+    {
+      "fault_info": "LayerFault(layers=[0], type=attention_mask, severity=0.7)",
+      "metrics": {},
+      "error": "Model must have transformer.h or transformer as ModuleList"
+    },
+    {
+      "fault_info": "LayerFault(layers=[0], type=attention_mask, severity=0.9)",
+      "metrics": {},
+      "error": "Model must have transformer.h or transformer as ModuleList"
+    },
+    {
+      "fault_info": "WeightCorruption(severity=0.1)",
+      "metrics": {
+        "Accuracy": {
+          "Accuracy": 0.75
+        },
+        "LatencyMetric": {
+          "latency_ms": 41.885932286580406,
+          "confidence": 0.9722852041658524,
+          "avg_latency_ms": 113.7518882751465,
+          "min_latency_ms": 41.885932286580406,
+          "max_latency_ms": 136.54518127441406,
+          "avg_confidence": 0.9372280371262691
+        }
+      }
+    },
+    {
+      "fault_info": "WeightCorruption(severity=0.3)",
+      "metrics": {
+        "Accuracy": {
+          "Accuracy": 0.75
+        },
+        "LatencyMetric": {
+          "latency_ms": 42.18935966491699,
+          "confidence": 0.8731372382809188,
+          "avg_latency_ms": 111.7470037369501,
+          "min_latency_ms": 42.18935966491699,
+          "max_latency_ms": 126.83796882629395,
+          "avg_confidence": 0.9333484537008433
+        }
+      }
+    },
+    {
+      "fault_info": "WeightCorruption(severity=0.5)",
+      "metrics": {
+        "Accuracy": {
+          "Accuracy": 0.5
+        },
+        "LatencyMetric": {
+          "latency_ms": 43.2280699412028,
+          "confidence": 0.9565995937014533,
+          "avg_latency_ms": 119.61740539187477,
+          "min_latency_ms": 43.2280699412028,
+          "max_latency_ms": 144.4700558980306,
+          "avg_confidence": 0.9376695757990128
+        }
+      }
+    },
+    {
+      "fault_info": "WeightCorruption(severity=0.7)",
+      "metrics": {
+        "Accuracy": {
+          "Accuracy": 0.0
+        },
+        "LatencyMetric": {
+          "latency_ms": 41.80534680684408,
+          "confidence": 0.9241948699035992,
+          "avg_latency_ms": 123.13310305277507,
+          "min_latency_ms": 41.80534680684408,
+          "max_latency_ms": 154.07093365987143,
+          "avg_confidence": 0.9072028538969781
+        }
+      }
+    },
+    {
+      "fault_info": "WeightCorruption(severity=0.9)",
+      "metrics": {
+        "Accuracy": {
+          "Accuracy": 0.25
+        },
+        "LatencyMetric": {
+          "latency_ms": 39.00496164957682,
+          "confidence": 0.9826710079136749,
+          "avg_latency_ms": 113.38102249872115,
+          "min_latency_ms": 39.00496164957682,
+          "max_latency_ms": 134.61971282958984,
+          "avg_confidence": 0.9183138407934566
+        }
+      }
+    },
+    {
+      "fault_info": "ActivationFault(layers=[0], type=clamp, severity=0.1)",
+      "metrics": {},
+      "error": "Model must have transformer.h or transformer as ModuleList"
+    },
+    {
+      "fault_info": "ActivationFault(layers=[0], type=clamp, severity=0.3)",
+      "metrics": {},
+      "error": "Model must have transformer.h or transformer as ModuleList"
+    },
+    {
+      "fault_info": "ActivationFault(layers=[0], type=clamp, severity=0.5)",
+      "metrics": {},
+      "error": "Model must have transformer.h or transformer as ModuleList"
+    },
+    {
+      "fault_info": "ActivationFault(layers=[0], type=clamp, severity=0.7)",
+      "metrics": {},
+      "error": "Model must have transformer.h or transformer as ModuleList"
+    },
+    {
+      "fault_info": "ActivationFault(layers=[0], type=clamp, severity=0.9)",
+      "metrics": {},
+      "error": "Model must have transformer.h or transformer as ModuleList"
+    }
+  ]
+}

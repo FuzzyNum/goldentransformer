@@ -49,16 +49,13 @@ def plot_results(
 def _results_to_dataframe(results: Dict[str, Any]) -> pd.DataFrame:
     """
     Convert results dictionary to DataFrame.
-    
     Args:
         results: Experiment results dictionary
-        
     Returns:
         pd.DataFrame: Results in DataFrame format
     """
     # Get baseline metrics
     baseline = results["baseline"]
-    
     # Create DataFrame rows
     rows = []
     # Support both old and new result structures

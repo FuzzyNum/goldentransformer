@@ -186,3 +186,56 @@ def test_latency_metric(model):
     assert 'min_latency_ms' in summary
     assert 'max_latency_ms' in summary
     assert 'avg_confidence' in summary 
+
+def test_bit_flip_corruption_degrades_accuracy():
+    import numpy as np
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer
+    from goldentransformer.core.fault_injector import FaultInjector
+    from goldentransformer.faults.weight_corruption import WeightCorruption
+    from goldentransformer.metrics.accuracy import Accuracy
+    from goldentransformer.core.experiment_runner import ExperimentRunner
+
+    # Use a finetuned model and a tiny dataset
+    model_name = "textattack/distilbert-base-uncased-imdb"
+    model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    texts = ["good movie", "bad movie", "excellent", "terrible"]
+    labels = [1, 0, 1, 0]
+    encodings = tokenizer(texts, padding=True, truncation=True, max_length=8, return_tensors="pt")
+    dataset = torch.utils.data.TensorDataset(encodings["input_ids"], encodings["attention_mask"], torch.tensor(labels))
+
+    # Baseline
+    injector = FaultInjector(model)
+    metrics = [Accuracy()]
+    runner = ExperimentRunner(
+        injector=injector,
+        faults=[],
+        metrics=metrics,
+        dataset=dataset,
+        batch_size=2
+    )
+    baseline_results = runner.run()["baseline"]["Accuracy"]
+    if isinstance(baseline_results, dict):
+        baseline_acc = list(baseline_results.values())[0]
+    else:
+        baseline_acc = baseline_results
+
+    # Bit-flip corruption (high rate for clear effect)
+    model2 = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
+    injector2 = FaultInjector(model2)
+    faults = [WeightCorruption(pattern="bit_flip", corruption_rate=0.5, target_layers=[0])]
+    runner2 = ExperimentRunner(
+        injector=injector2,
+        faults=faults,
+        metrics=metrics,
+        dataset=dataset,
+        batch_size=2
+    )
+    faulted_results = runner2.run()["fault_results"][0]["metrics"]["Accuracy"]
+    if isinstance(faulted_results, dict):
+        faulted_acc = list(faulted_results.values())[0]
+    else:
+        faulted_acc = faulted_results
+
+    print(f"Bit-flip test: baseline_acc={baseline_acc}, faulted_acc={faulted_acc}")
+    assert faulted_acc < baseline_acc, "Bit-flip corruption did not degrade accuracy!" 
