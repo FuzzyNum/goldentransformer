@@ -8,7 +8,7 @@ import random
 prompt = "The meaning of life is"
 model_name = "gpt2"
 layers_to_corrupt = [0, 5, 10]
-corruption_rate = 1e-12
+corruption_rate = 1e-7
 num_trials = 1000  # Adjust as needed for feasibility
 max_new_tokens = 50
 
@@ -25,8 +25,8 @@ def generate(model, tokenizer, prompt, max_new_tokens=20):
     output = model.generate(
         input_ids,
         max_new_tokens=max_new_tokens,
-        do_sample=True,
-        temperature=1.0,
+        do_sample=False,
+        temperature=0.0,
         pad_token_id=tokenizer.eos_token_id
     )
     return tokenizer.decode(output[0], skip_special_tokens=True)
