@@ -106,7 +106,7 @@ def _results_to_dataframe(results: Dict[str, Any]) -> pd.DataFrame:
                     "baseline": baseline_value,
                     "impact": impact
                 })
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows)              
 
 def _plot_severity_impact(df: pd.DataFrame, output_dir: str) -> None:
     """

@@ -16,7 +16,7 @@ from datasets import load_dataset
 
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    num_trials = 10
+    num_trials = 30
     seeds = [42 + i for i in range(num_trials)]
     # Allow model name as a command-line argument
     if len(sys.argv) > 1:
@@ -116,36 +116,24 @@ def main():
     std_faulted = all_faulted.std(axis=0)
     layers = np.arange(num_layers)
     plt.figure(figsize=(10, 6))
-    plt.errorbar(layers, mean_baseline, yerr=std_baseline, label='Baseline Perplexity', fmt='-o')
-    plt.errorbar(layers, mean_faulted, yerr=std_faulted, label='Faulted Perplexity', fmt='-o')
-    plt.xlabel('Layer Index')
-    plt.ylabel('Perplexity')
-    plt.title(f'Perplexity vs. Layer Index (Bit-Flip Fault, Mean ± Std) - {model_name}')
-    plt.yscale('log')
-    plt.legend()
-    plt.grid(True)
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.errorbar(layers, mean_baseline, yerr=std_baseline*(1.96/np.sqrt(num_trials)), label='Baseline Perplexity', fmt='-o',color='black')
+    plt.errorbar(layers, mean_faulted, yerr=std_faulted*(1.96/np.sqrt(num_trials)), label='Faulted Perplexity', fmt='-o',color='red')
+    plt.xlabel('Layer Index', fontsize=16)
+    plt.ylabel('Perplexity', fontsize=16)
+    plt.title(f'Perplexity vs. Layer Index (Bit-Flip Fault, Mean ± Std) - {model_name}', fontsize=18)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.grid(False)
+    plt.gca().spines['top'].set_visible(False)
+    plt.gca().spines['right'].set_visible(False)
+    plt.gca().spines['left'].set_linewidth(1.2)
+    plt.gca().spines['bottom'].set_linewidth(1.2)
+    plt.legend(frameon=False, fontsize=14)
     plt.tight_layout()
     plt.savefig(os.path.join(layer_results_dir, f"perplexity_vs_layer_with_errorbars_{model_name}.png"))
     plt.close()
     print(f"Aggregate plot with error bars saved to {os.path.join(layer_results_dir, f'perplexity_vs_layer_with_errorbars_{model_name}.png')}")
-
-    # Plot minimalist version: no axis labels/titles, Times New Roman font for numbers and legend
-    plt.figure(figsize=(10, 6))
-    plt.plot(layer_indices, baseline_perplexities, marker='o', label='Baseline Perplexity')
-    plt.plot(layer_indices, faulted_perplexities, marker='o', label='Faulted Perplexity')
-    plt.yscale('log')
-    plt.legend(prop={'family': 'Times New Roman', 'size': 14})
-    plt.grid(True)
-    plt.tight_layout()
-    ax = plt.gca()
-    ax.set_xlabel("")
-    ax.set_ylabel("")
-    ax.set_title("")
-    ax.tick_params(axis='both', which='major', labelsize=14)
-    for label in ax.get_xticklabels() + ax.get_yticklabels():
-        label.set_fontname('Times New Roman')
-    plt.savefig(os.path.join(layer_results_dir, f"perplexity_vs_layer_minimalist_{model_name}.png"))
-    plt.close()
 
 if __name__ == "__main__":
     main() 

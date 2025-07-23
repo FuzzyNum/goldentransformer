@@ -36,7 +36,7 @@ def prepare_classification_dataset(tokenizer, max_length=64, num_samples=50):
     return torch.utils.data.TensorDataset(input_ids, attention_mask, labels)
 
 def main():
-    num_trials = 10
+    num_trials = 30
     seeds = [42 + i for i in range(num_trials)]
     
     # Use a proper classification model
@@ -79,7 +79,7 @@ def main():
             faults = [
                 WeightCorruption(
                     pattern="random",
-                    corruption_rate=0.1,
+                    corruption_rate=0.05,
                     target_layers=[layer_idx]
                 )
             ]
@@ -142,11 +142,11 @@ def main():
     # Plot with error bars
     plt.figure(figsize=(10, 6))
     plt.rcParams["font.family"] = "Times New Roman"
-    plt.errorbar(layers, mean_baseline, yerr=std_baseline, label='Baseline', fmt='-o', color='black')
-    plt.errorbar(layers, mean_faulted, yerr=std_faulted, label='Corrupted', fmt='-o', color='red')
+    plt.errorbar(layers, mean_baseline, yerr=std_baseline*(1.96/np.sqrt(num_trials)), label='Baseline', fmt='-o', color='black')
+    plt.errorbar(layers, mean_faulted, yerr=std_faulted*(1.96/np.sqrt(num_trials)), label='Corrupted', fmt='-o', color='red')
     plt.xlabel('Layer Index', fontsize=16)
     plt.ylabel('Accuracy', fontsize=16)
-    plt.title('Layerwise Random Weight Corruption (p=0.1)', fontsize=18)
+    plt.title('Layerwise Random Weight Corruption (p=0.05)', fontsize=18)
     plt.xticks(fontsize=14)
     plt.yticks(fontsize=14)
     plt.grid(False)

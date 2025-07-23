@@ -8,7 +8,7 @@ import random
 prompt = "The meaning of life is"
 model_name = "gpt2"
 layer_to_corrupt = [0, 5, 10]
-corruption_rate = 1e-12
+corruption_rate = 1e-3
 seed = 42
 
 def set_seed(seed):

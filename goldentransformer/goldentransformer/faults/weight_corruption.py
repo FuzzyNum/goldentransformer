@@ -175,7 +175,7 @@ class WeightCorruption(BaseFault):
 
         for idx in zip(*corrupted_indices):
             flat_idx = np.ravel_multi_index(idx, shape)
-            bit_pos = np.random.randint(0, 32)
+            bit_pos = np.random.randint(0, mantissa_bits)
             before = arr.flat[flat_idx]
             arr.flat[flat_idx] ^= (1 << bit_pos)
             after = arr.flat[flat_idx]
