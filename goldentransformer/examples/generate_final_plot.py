@@ -71,11 +71,10 @@ def generate_final_plot():
     
     # Create plot
     plt.figure(figsize=(10, 6))
-    plt.rcParams["font.family"] = "Times New Roman"
     plt.errorbar(layers, mean_baseline, yerr=std_baseline*1.96/np.sqrt(num_trials), label='Baseline Accuracy', fmt='-o', capsize=5)
-    plt.errorbar(layers, mean_faulted, yerr=std_faulted*1.96/np.sqrt(num_trials), label='Faulted Accuracy', fmt='-o', capsize=5)
-    plt.xlabel('Layer Index', fontsize=16)
-    plt.ylabel('Accuracy', fontsize=16)
+    plt.errorbar(layers, mean_faulted, yerr=std_faulted*1.96/np.sqrt(num_trials), label='Faulted Accuracy', fmt='-s', capsize=5)
+    plt.xlabel('Layer Index')
+    plt.ylabel('Accuracy')
     plt.title('Accuracy vs. Layer Index (Bit-Flip Fault, Mean ± Std)\nDistilBERT-IMDB Classification')
     plt.legend()
     plt.grid(True, alpha=0.3)

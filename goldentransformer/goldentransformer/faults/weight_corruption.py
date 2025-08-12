@@ -162,7 +162,7 @@ class WeightCorruption(BaseFault):
         weights_cpu = weights.detach().cpu().contiguous()
         arr = weights_cpu.numpy().view(np.int32)
         shape = weights_cpu.shape
-        mantissa_bits = 23
+        mantissa_bits = 23  # IEEE 754 mantissa bits (0-22)
 
         # Save original for diagnostics
         original = weights_cpu.clone()
@@ -175,6 +175,7 @@ class WeightCorruption(BaseFault):
 
         for idx in zip(*corrupted_indices):
             flat_idx = np.ravel_multi_index(idx, shape)
+            # Only flip mantissa bits (0-22) to avoid inf/nan values
             bit_pos = np.random.randint(0, mantissa_bits)
             before = arr.flat[flat_idx]
             arr.flat[flat_idx] ^= (1 << bit_pos)

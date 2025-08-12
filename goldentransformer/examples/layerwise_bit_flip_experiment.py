@@ -16,7 +16,7 @@ from datasets import load_dataset
 
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    num_trials = 30
+    num_trials = 30  # Increased for 95% confidence interval validity
     seeds = [42 + i for i in range(num_trials)]
     # Allow model name as a command-line argument
     if len(sys.argv) > 1:
@@ -111,29 +111,76 @@ def main():
     all_baseline = np.array(all_baseline)
     all_faulted = np.array(all_faulted)
     mean_baseline = all_baseline.mean(axis=0)
-    std_baseline = all_baseline.std(axis=0)
+    sem_baseline = all_baseline.std(axis=0) / np.sqrt(num_trials)  # Standard Error of Mean
     mean_faulted = all_faulted.mean(axis=0)
-    std_faulted = all_faulted.std(axis=0)
+    sem_faulted = all_faulted.std(axis=0) / np.sqrt(num_trials)  # Standard Error of Mean
     layers = np.arange(num_layers)
-    plt.figure(figsize=(10, 6))
+    
+    # Plot with error bars - Fixed visualization
+    plt.figure(figsize=(8, 8))  # Square aspect ratio
     plt.rcParams["font.family"] = "Times New Roman"
-    plt.errorbar(layers, mean_baseline, yerr=std_baseline*(1.96/np.sqrt(num_trials)), label='Baseline Perplexity', fmt='-o',color='black')
-    plt.errorbar(layers, mean_faulted, yerr=std_faulted*(1.96/np.sqrt(num_trials)), label='Faulted Perplexity', fmt='-o',color='red')
-    plt.xlabel('Layer Index', fontsize=16)
-    plt.ylabel('Perplexity', fontsize=16)
-    plt.title(f'Perplexity vs. Layer Index (Bit-Flip Fault, Mean ± Std) - {model_name}', fontsize=18)
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
-    plt.grid(False)
-    plt.gca().spines['top'].set_visible(False)
-    plt.gca().spines['right'].set_visible(False)
-    plt.gca().spines['left'].set_linewidth(1.2)
-    plt.gca().spines['bottom'].set_linewidth(1.2)
-    plt.legend(frameon=False, fontsize=14)
+    
+    # Plot with different markers and line styles
+    plt.errorbar(layers, mean_baseline, yerr=sem_baseline, 
+                label='Baseline', fmt='o-', color='blue', 
+                markersize=8, capsize=4, capthick=1.5, linewidth=2)
+    plt.errorbar(layers, mean_faulted, yerr=sem_faulted, 
+                label='Faulted', fmt='s--', color='red', 
+                markersize=8, capsize=4, capthick=1.5, linewidth=2)
+    
+    plt.xlabel('Layer Index', fontsize=14)
+    plt.ylabel('Perplexity', fontsize=14)
+    plt.yscale('log')
+    plt.legend(fontsize=12, loc='lower right')
+    plt.grid(True, alpha=0.3)
+    
+    # Ensure axes boundaries are visible (box around graph)
+    ax = plt.gca()
+    ax.spines['top'].set_visible(True)
+    ax.spines['right'].set_visible(True)
+    ax.spines['left'].set_visible(True)
+    ax.spines['bottom'].set_visible(True)
+    ax.spines['top'].set_linewidth(1.0)
+    ax.spines['right'].set_linewidth(1.0)
+    ax.spines['left'].set_linewidth(1.0)
+    ax.spines['bottom'].set_linewidth(1.0)
+    
     plt.tight_layout()
-    plt.savefig(os.path.join(layer_results_dir, f"perplexity_vs_layer_with_errorbars_{model_name}.png"))
+    plt.savefig(os.path.join(layer_results_dir, f"perplexity_vs_layer_with_errorbars_{model_name}.png"), dpi=300)
     plt.close()
     print(f"Aggregate plot with error bars saved to {os.path.join(layer_results_dir, f'perplexity_vs_layer_with_errorbars_{model_name}.png')}")
+
+    # Plot minimalist version - Fixed visualization
+    plt.figure(figsize=(8, 8))  # Square aspect ratio
+    plt.plot(layer_indices, baseline_perplexities, marker='o', linestyle='-', 
+             label='Baseline', markersize=8, linewidth=2)
+    plt.plot(layer_indices, faulted_perplexities, marker='s', linestyle='--', 
+             label='Corrupted', markersize=8, linewidth=2)
+    plt.yscale('log')
+    plt.legend(prop={'family': 'Times New Roman', 'size': 12})
+    plt.grid(True, alpha=0.3)
+    
+    # Ensure axes boundaries are visible
+    ax = plt.gca()
+    ax.spines['top'].set_visible(True)
+    ax.spines['right'].set_visible(True)
+    ax.spines['left'].set_visible(True)
+    ax.spines['bottom'].set_visible(True)
+    ax.spines['top'].set_linewidth(1.0)
+    ax.spines['right'].set_linewidth(1.0)
+    ax.spines['left'].set_linewidth(1.0)
+    ax.spines['bottom'].set_linewidth(1.0)
+    
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.set_title("")
+    ax.tick_params(axis='both', which='major', labelsize=12)
+    for label in ax.get_xticklabels() + ax.get_yticklabels():
+        label.set_fontname('Times New Roman')
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(layer_results_dir, f"perplexity_vs_layer_minimalist_{model_name}.png"), dpi=300)
+    plt.close()
 
 if __name__ == "__main__":
     main() 

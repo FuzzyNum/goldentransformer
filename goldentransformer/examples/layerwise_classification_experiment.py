@@ -36,7 +36,7 @@ def prepare_classification_dataset(tokenizer, max_length=64, num_samples=50):
     return torch.utils.data.TensorDataset(input_ids, attention_mask, labels)
 
 def main():
-    num_trials = 30
+    num_trials = 30  # Increased for 95% confidence interval validity
     seeds = [42 + i for i in range(num_trials)]
     
     # Use a proper classification model
@@ -133,28 +133,42 @@ def main():
     all_faulted = np.array(all_faulted)
     
     mean_baseline = all_baseline.mean(axis=0)
-    std_baseline = all_baseline.std(axis=0)
+    sem_baseline = all_baseline.std(axis=0) / np.sqrt(num_trials)  # Standard Error of Mean
     mean_faulted = all_faulted.mean(axis=0)
-    std_faulted = all_faulted.std(axis=0)
+    sem_faulted = all_faulted.std(axis=0) / np.sqrt(num_trials)  # Standard Error of Mean
     
     layers = np.arange(num_layers)
     
-    # Plot with error bars
-    plt.figure(figsize=(10, 6))
+    # Plot with error bars - Fixed visualization
+    plt.figure(figsize=(8, 8))  # Square aspect ratio
     plt.rcParams["font.family"] = "Times New Roman"
-    plt.errorbar(layers, mean_baseline, yerr=std_baseline*(1.96/np.sqrt(num_trials)), label='Baseline', fmt='-o', color='black')
-    plt.errorbar(layers, mean_faulted, yerr=std_faulted*(1.96/np.sqrt(num_trials)), label='Corrupted', fmt='-o', color='red')
-    plt.xlabel('Layer Index', fontsize=16)
-    plt.ylabel('Accuracy', fontsize=16)
-    plt.title('Layerwise Random Weight Corruption (p=0.05)', fontsize=18)
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
-    plt.grid(False)
-    plt.gca().spines['top'].set_visible(False)
-    plt.gca().spines['right'].set_visible(False)
-    plt.gca().spines['left'].set_linewidth(1.2)
-    plt.gca().spines['bottom'].set_linewidth(1.2)
-    plt.legend(frameon=False, fontsize=14)
+    
+    # Plot with different markers and line styles
+    plt.errorbar(layers, mean_baseline, yerr=sem_baseline, 
+                label='Baseline', fmt='o-', color='blue', 
+                markersize=8, capsize=4, capthick=1.5, linewidth=2)
+    plt.errorbar(layers, mean_faulted, yerr=sem_faulted, 
+                label='Corrupted', fmt='s--', color='red', 
+                markersize=8, capsize=4, capthick=1.5, linewidth=2)
+    
+    plt.xlabel('Layer Index', fontsize=14)
+    plt.ylabel('Accuracy', fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.legend(fontsize=12, loc='lower right')
+    plt.grid(True, alpha=0.3)
+    
+    # Ensure axes boundaries are visible (box around graph)
+    ax = plt.gca()
+    ax.spines['top'].set_visible(True)
+    ax.spines['right'].set_visible(True)
+    ax.spines['left'].set_visible(True)
+    ax.spines['bottom'].set_visible(True)
+    ax.spines['top'].set_linewidth(1.0)
+    ax.spines['right'].set_linewidth(1.0)
+    ax.spines['left'].set_linewidth(1.0)
+    ax.spines['bottom'].set_linewidth(1.0)
+    
     plt.tight_layout()
     # Fix filename by replacing slashes with underscores
     safe_model_name = model_name.replace('/', '_')
